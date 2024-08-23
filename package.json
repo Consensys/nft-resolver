@@ -1,0 +1,26 @@
+{
+  "name": "nft-resolver",
+  "version": "1.0.0",
+  "description": "NFT Resolver to resolve names based on NFT ownership on Linea",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/Consensys/nft-resolver.git"
+  },
+  "author": "Consensys",
+  "license": "Apache-2.0",
+  "bugs": {
+    "url": "https://github.com/Consensys/nft-resolver/issues"
+  },
+  "homepage": "https://github.com/Consensys/nft-resolver#readme",
+  "devDependencies": {
+    "@nomicfoundation/hardhat-toolbox": "^5.0.0",
+    "hardhat": "^2.22.9"
+  },
+  "dependencies": {
+    "@ensdomains/ens-contracts": "^1.2.0",
+    "@openzeppelin/contracts": "^5.0.2"
+  }
+}
