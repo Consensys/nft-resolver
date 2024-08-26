@@ -26,6 +26,8 @@ const labelhash = (label: string) =>
   ethers.keccak256(ethers.toUtf8Bytes(label));
 const encodeName = (name: string) =>
   "0x" + packet.name.encode(name).toString("hex");
+const nftId = 1;
+const wrongNftId = 0;
 const domainName = "foos";
 const baseDomain = `${domainName}.eth`;
 const node = ethers.namehash(baseDomain);
@@ -90,8 +92,8 @@ describe("Crosschain Resolver", () => {
     );
     signer = await l1Provider.getSigner(0);
     signerAddress = await signer.getAddress();
-    // TODO: The NFT contract deployed on Linea Sepolia
-    l2NFTContractAddress = "";
+    // The NFT contract deployed on Linea Sepolia
+    l2NFTContractAddress = "0x27c11E7d60bA46a55EBF1fA33E6c30eDeAb162B6";
 
     const Rollup = await ethers.getContractFactory("RollupMock", signer);
 
@@ -271,10 +273,6 @@ describe("Crosschain Resolver", () => {
   it("should resolve empty ETH Address", async () => {
     await target.setTarget(encodedname, l2NFTContractAddress);
     const addr = "0x0000000000000000000000000000000000000000";
-    const result = await l2NFTContract["addr(bytes32)"](node);
-    expect(result).to.equal(addr);
-    await l1Provider.send("evm_mine", []);
-
     const i = new ethers.Interface(["function addr(bytes32) returns(address)"]);
     const calldata = i.encodeFunctionData("addr", [node]);
     const result2 = await target.resolve(encodedname, calldata, {
