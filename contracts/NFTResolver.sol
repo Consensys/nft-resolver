@@ -1,6 +1,9 @@
 // SPDX-License-Identifier: MIT
 pragma solidity 0.8.25;
 
+import {EVMFetcher} from "@consensys/linea-state-verifier/contracts/EVMFetcher.sol";
+import {EVMFetchTarget} from "@consensys/linea-state-verifier/contracts/EVMFetchTarget.sol";
+import {IEVMVerifier} from "@consensys/linea-state-verifier/contracts/IEVMVerifier.sol";
 import "@ensdomains/ens-contracts/contracts/registry/ENS.sol";
 import {INameWrapper} from "@ensdomains/ens-contracts/contracts/wrapper/INameWrapper.sol";
 import {BytesUtils} from "@ensdomains/ens-contracts/contracts/utils/BytesUtils.sol";
@@ -11,7 +14,7 @@ import {ITargetResolver} from "./ITargetResolver.sol";
 import {IAddrSetter} from "./IAddrSetter.sol";
 import "@openzeppelin/contracts/utils/introspection/ERC165.sol";
 
-contract L1Resolver is
+contract NFTResolver is
     EVMFetchTarget,
     ITargetResolver,
     IExtendedResolver,
@@ -32,11 +35,6 @@ contract L1Resolver is
     event TargetSet(bytes name, address target);
 
     function isAuthorised(bytes32 node) internal view returns (bool) {
-        // TODO: Add support for
-        // trustedETHController
-        // trustedReverseRegistrar
-        // isApprovedForAll
-        // isApprovedFor
         address owner = ens.owner(node);
         if (owner == address(nameWrapper)) {
             owner = nameWrapper.ownerOf(uint256(node));
@@ -103,7 +101,6 @@ contract L1Resolver is
         );
         targets[node] = target;
         emit TargetSet(name, target);
-        emit MetadataChanged(name, graphqlUrl);
     }
 
     /**
@@ -154,7 +151,8 @@ contract L1Resolver is
 
         if (selector == IAddrResolver.addr.selector) {
             bytes32 node = abi.decode(data[4:], (bytes32));
-            return _addr(node, target);
+            // TODO: Replace node by NFT ID
+            return _addr(1, target);
         }
 
         // None selector has been found it reverts
@@ -176,17 +174,13 @@ contract L1Resolver is
     }
 
     function _addr(
-        bytes32 node,
+        uint256 tokenId,
         address target
     ) private view returns (bytes memory) {
         EVMFetcher
             .newFetchRequest(verifier, target)
-            .getStatic(RECORD_VERSIONS_SLOT)
-            .element(node)
-            .getDynamic(VERSIONABLE_ADDRESSES_SLOT)
-            .ref(0)
-            .element(node)
-            .element(COIN_TYPE_ETH)
+            .getDynamic(OWNERS_SLOT)
+            .element(tokenId)
             .fetch(this.addrCallback.selector, ""); // recordVersions
     }
 
