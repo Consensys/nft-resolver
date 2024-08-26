@@ -16,11 +16,16 @@
   },
   "homepage": "https://github.com/Consensys/nft-resolver#readme",
   "devDependencies": {
+    "@chainlink/ccip-read-server": "^0.2.1",
+    "@consensys/linea-ccip-gateway": "^1.0.1",
     "@nomicfoundation/hardhat-toolbox": "^5.0.0",
-    "hardhat": "^2.22.9"
+    "dns-packet": "^5.6.1",
+    "hardhat": "^2.22.9",
+    "supertest": "^7.0.0"
   },
   "dependencies": {
-    "@ensdomains/ens-contracts": "^1.2.0",
-    "@openzeppelin/contracts": "^5.0.2"
+    "@consensys/linea-state-verifier": "^1.0.1",
+    "@ensdomains/ens-contracts": "^1.2.2",
+    "@openzeppelin/contracts": "^4.1.0"
   }
 }
