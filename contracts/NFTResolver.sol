@@ -1,4 +1,4 @@
-// SPDX-License-Identifier: MIT
+// SPDX-License-Identifier: Apache-2.0
 pragma solidity 0.8.25;
 
 import {EVMFetcher} from "@consensys/linea-state-verifier/contracts/EVMFetcher.sol";
@@ -13,6 +13,7 @@ import "@ensdomains/ens-contracts/contracts/resolvers/profiles/IExtendedResolver
 import {ITargetResolver} from "./ITargetResolver.sol";
 import {IAddrSetter} from "./IAddrSetter.sol";
 import "@openzeppelin/contracts/utils/introspection/ERC165.sol";
+import {LabelUtils} from "./LabelUtils.sol";
 
 contract NFTResolver is
     EVMFetchTarget,
@@ -146,17 +147,36 @@ contract NFTResolver is
     ) external view returns (bytes memory result) {
         require(data.length >= 4, "param data too short");
 
+        bytes32 node = abi.decode(data[4:], (bytes32));
+        bool isBaseDomain = targets[node] != address(0);
+
+        // If trying to resolve the base domain, we return the target contract as the address
+        if (isBaseDomain) {
+            return abi.encode(targets[node]);
+        }
+
         (, address target) = _getTarget(name, 0);
+
         bytes4 selector = bytes4(data);
 
         if (selector == IAddrResolver.addr.selector) {
-            bytes32 node = abi.decode(data[4:], (bytes32));
-            // TODO: Replace node by NFT ID
-            return _addr(1, target);
+            // Get NFT Index from the
+            uint256 nftId = extractNFTId(name);
+            return _addr(nftId, target);
         }
 
         // None selector has been found it reverts
         revert("invalid selector");
+    }
+
+    /**
+     * Get the NFT Id from the ENS name's label
+     * @param name DNS encoded ENS name
+     * @return id the NFT id
+     */
+    function extractNFTId(bytes calldata name) public pure returns (uint256) {
+        bytes memory firstLabel = LabelUtils.extractFirstLabel(name);
+        return LabelUtils.extractNumericSuffix(firstLabel);
     }
 
     /**
@@ -179,7 +199,7 @@ contract NFTResolver is
     ) private view returns (bytes memory) {
         EVMFetcher
             .newFetchRequest(verifier, target)
-            .getDynamic(OWNERS_SLOT)
+            .getStatic(OWNERS_SLOT)
             .element(tokenId)
             .fetch(this.addrCallback.selector, ""); // recordVersions
     }
@@ -188,7 +208,8 @@ contract NFTResolver is
         bytes[] memory values,
         bytes memory
     ) external pure returns (bytes memory) {
-        return abi.encode(address(bytes20(values[1])));
+        address addr = abi.decode(values[0], (address));
+        return abi.encode(addr);
     }
 
     function supportsInterface(
