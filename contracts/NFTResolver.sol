@@ -28,6 +28,8 @@ contract NFTResolver is
     ENS public immutable ens;
     INameWrapper public immutable nameWrapper;
     uint256 public immutable l2ChainId;
+    // PublicResolver used to resolve a base domain such as xxx.eth when queried
+    address public immutable publicResolver;
     mapping(bytes32 => address) targets;
     uint256 constant OWNERS_SLOT = 2;
     // To check how old is the value/proof returned and is in the acceptable range
@@ -55,12 +57,14 @@ contract NFTResolver is
      * @param _ens          The ENS registry address
      * @param _nameWrapper  The ENS name wrapper address
      * @param _l2ChainId    The chainId at which the resolver resolves data from
+     * @param _publicResolver The PublicResolver address to use to resolve base domains
      */
     constructor(
         IEVMVerifier _verifier,
         ENS _ens,
         INameWrapper _nameWrapper,
-        uint256 _l2ChainId
+        uint256 _l2ChainId,
+        address _publicResolver
     ) {
         require(
             address(_nameWrapper) != address(0),
@@ -75,6 +79,7 @@ contract NFTResolver is
         ens = _ens;
         nameWrapper = _nameWrapper;
         l2ChainId = _l2ChainId;
+        publicResolver = _publicResolver;
     }
 
     /**
@@ -150,9 +155,9 @@ contract NFTResolver is
         bytes32 node = abi.decode(data[4:], (bytes32));
         bool isBaseDomain = targets[node] != address(0);
 
-        // If trying to resolve the base domain, we return the target contract as the address
+        // If trying to resolve the base domain, we use the PublicResolver
         if (isBaseDomain) {
-            return abi.encode(targets[node]);
+            return _resolve(name, data);
         }
 
         (, address target) = _getTarget(name, 0);
@@ -191,6 +196,29 @@ contract NFTResolver is
     ) external view returns (bytes memory result) {
         (, address target) = _getTarget(name, 0);
         _writeDeferral(target);
+    }
+
+    /**
+     * @dev The `PublicResolver` does not implement the `resolve(bytes,bytes)` method.
+     *     This method completes the resolution request by staticcalling `PublicResolver` with the resolve request.
+     *     Implementation matches the ENS `ExtendedResolver:resolve(bytes,bytes)` method with the exception that it `staticcall`s the
+     *     the `rootResolver` instead of `address(this)`.
+     * @param data The ABI encoded data for the underlying resolution function (Eg, addr(bytes32), text(bytes32,string), etc).
+     * @return The return data, ABI encoded identically to the underlying function.
+     */
+    function _resolve(
+        bytes memory,
+        bytes memory data
+    ) internal view returns (bytes memory) {
+        (bool success, bytes memory result) = publicResolver.staticcall(data);
+        if (success) {
+            return result;
+        } else {
+            // Revert with the reason provided by the call
+            assembly {
+                revert(add(result, 0x20), mload(result))
+            }
+        }
     }
 
     function _addr(

@@ -1,0 +1,19 @@
+name: Run nft-resolver tests
+
+on:
+  pull_request:
+    branches:
+      - main
+
+jobs:
+  nft-resolver-tests:
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Install Dependencies
+        run: npm install --frozen-lockfile
+
+      - name: Run tests
+        run: npm run test

@@ -39,6 +39,7 @@ const subDomainNode = ethers.namehash(subDomain);
 const encodedSubDomain = encodeName(subDomain);
 
 const wrongSubDomain = "foo.foos.eth";
+const wrongSubDomainNode = ethers.namehash(wrongSubDomain);
 const wrongEncodedSubDomain = encodeName(wrongSubDomain);
 
 const EMPTY_ADDRESS = "0x0000000000000000000000000000000000000000";
@@ -195,6 +196,7 @@ describe("Crosschain Resolver", () => {
       EMPTY_ADDRESS,
       reverseRegistrarAddress
     );
+    await publicResolver.setAddr(node, signerAddress);
 
     const publicResolverAddress = await publicResolver.getAddress();
     await reverseRegistrar.setDefaultResolver(publicResolverAddress);
@@ -236,7 +238,8 @@ describe("Crosschain Resolver", () => {
       verifierAddress,
       ensAddress,
       "0x0000000000000000000000000000000000000001",
-      59141
+      59141,
+      publicResolverAddress
     );
     // Mine an empty block so we have something to prove against
     await l1Provider.send("evm_mine", []);
@@ -277,7 +280,7 @@ describe("Crosschain Resolver", () => {
   it("should revert if there are no numeric suffix in the queried name", async () => {
     await target.setTarget(encodedname, l2NFTContractAddress);
     const i = new ethers.Interface(["function addr(bytes32) returns(address)"]);
-    const calldata = i.encodeFunctionData("addr", [node]);
+    const calldata = i.encodeFunctionData("addr", [wrongSubDomainNode]);
 
     await expect(
       target.resolve(wrongEncodedSubDomain, calldata, {
@@ -286,7 +289,7 @@ describe("Crosschain Resolver", () => {
     ).to.be.revertedWith("No numeric suffix found");
   });
 
-  it.only("should resolve ETH Address for the subdomain", async () => {
+  it("should resolve ETH Address for the subdomain", async () => {
     await target.setTarget(encodedname, l2NFTContractAddress);
     const result = await l2NFTContract["ownerOf(uint256)"](nftId);
     expect(ethers.getAddress(result)).to.equal(registrantAddr);
@@ -308,7 +311,7 @@ describe("Crosschain Resolver", () => {
     const i = new ethers.Interface([
       "function unknown(bytes32) returns(address)",
     ]);
-    const calldata = i.encodeFunctionData("unknown", [node]);
+    const calldata = i.encodeFunctionData("unknown", [subDomainNode]);
     await expect(
       target.resolve(encodedname, calldata, {
         enableCcipRead: true,
@@ -332,7 +335,7 @@ describe("Crosschain Resolver", () => {
     expect(result).to.equal(nftId);
   });
 
-  it.only("should resolve ETH Address for the base domain", async () => {
+  it("should resolve ETH Address for the base domain using the PublicResolver", async () => {
     await target.setTarget(encodedname, l2NFTContractAddress);
     const i = new ethers.Interface(["function addr(bytes32) returns(address)"]);
     const calldata = i.encodeFunctionData("addr", [node]);
@@ -340,8 +343,6 @@ describe("Crosschain Resolver", () => {
       enableCcipRead: true,
     });
     const decoded = i.decodeFunctionResult("addr", result2);
-    expect(ethers.getAddress(decoded[0])).to.equal(
-      ethers.getAddress(l2NFTContractAddress)
-    );
+    expect(ethers.getAddress(decoded[0])).to.equal(signerAddress);
   });
 });
