@@ -32,8 +32,7 @@ const baseDomain = `${domainName}.eth`;
 const node = ethers.namehash(baseDomain);
 const encodedname = encodeName(baseDomain);
 
-// TODO use: registrantAddr = "0x4a8e79E5258592f208ddba8A8a0d3ffEB051B10A";
-const registrantAddr = "0xDeaD1F5aF792afc125812E875A891b038f888258";
+const registrantAddr = "0x4a8e79E5258592f208ddba8A8a0d3ffEB051B10A";
 const subDomain = "foo1.foos.eth";
 const subDomainNode = ethers.namehash(subDomain);
 const encodedSubDomain = encodeName(subDomain);
@@ -60,7 +59,7 @@ declare module "hardhat/types/runtime" {
   }
 }
 
-describe("Crosschain Resolver", () => {
+describe("NFT Resolver", () => {
   let l1Provider: BrowserProvider;
   let l2Provider: JsonRpcProvider;
   let l1SepoliaProvider: JsonRpcProvider;
@@ -97,8 +96,7 @@ describe("Crosschain Resolver", () => {
     signer = await l1Provider.getSigner(0);
     signerAddress = await signer.getAddress();
     // The NFT contract deployed on Linea Sepolia
-    // TODO use: l2NFTContractAddress = "0x27c11E7d60bA46a55EBF1fA33E6c30eDeAb162B6";
-    l2NFTContractAddress = "0x03f8B4b140249Dc7B2503C928E7258CCe1d91F1A";
+    l2NFTContractAddress = "0x27c11E7d60bA46a55EBF1fA33E6c30eDeAb162B6";
 
     const Rollup = await ethers.getContractFactory("RollupMock", signer);
 
