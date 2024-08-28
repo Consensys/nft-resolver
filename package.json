@@ -3,7 +3,9 @@
   "version": "1.0.0",
   "description": "NFT Resolver to resolve names based on NFT ownership on Linea",
   "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1"
+    "test": "npx hardhat test",
+    "clean": "npx hardhat clean",
+    "compile": "npx hardhat compile"
   },
   "repository": {
     "type": "git",
