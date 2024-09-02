@@ -50,4 +50,40 @@ library LabelUtils {
         require(hasNumber, "No numeric suffix found");
         return num;
     }
+
+    /**
+     * Check if the bytes param is a number or not
+     * @param input bytes to check
+     * @return true if number, false otherwise
+     */
+    function isNumber(bytes memory input) public pure returns (bool) {
+        for (uint i = 0; i < input.length; i++) {
+            // Check if each byte is within the ASCII range for '0' to '9'
+            if (input[i] < 0x30 || input[i] > 0x39) {
+                return false;
+            }
+        }
+        return true;
+    }
+
+    /**
+     * Counts the number of labels in the DNS encoded input given
+     * @param input the DNS encoded input to count from
+     * @return number labels found
+     */
+    function countLabels(bytes memory input) public pure returns (uint) {
+        uint count = 0;
+        uint i = 0;
+
+        while (i < input.length) {
+            uint labelLength = uint(uint8(input[i]));
+            if (labelLength == 0) {
+                break; // End of the DNS name
+            }
+            count++;
+            i += labelLength + 1;
+        }
+
+        return count;
+    }
 }

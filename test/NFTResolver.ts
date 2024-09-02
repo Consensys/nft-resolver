@@ -33,13 +33,21 @@ const node = ethers.namehash(baseDomain);
 const encodedname = encodeName(baseDomain);
 
 const registrantAddr = "0x4a8e79E5258592f208ddba8A8a0d3ffEB051B10A";
-const subDomain = "foo1.foos.eth";
+const subDomain = "1.foos.eth";
 const subDomainNode = ethers.namehash(subDomain);
 const encodedSubDomain = encodeName(subDomain);
+
+const labelWithNonNumericChar = "foo1.foos.eth";
+const labelWithNonNumericCharNode = ethers.namehash(labelWithNonNumericChar);
+const encodedlabelWithNonNumericChar = encodeName(labelWithNonNumericChar);
 
 const wrongSubDomain = "foo.foos.eth";
 const wrongSubDomainNode = ethers.namehash(wrongSubDomain);
 const wrongEncodedSubDomain = encodeName(wrongSubDomain);
+
+const subSubDomain = "5.4.foos.eth";
+const subSubDomainNode = ethers.namehash(subSubDomain);
+const encodedSubSubDomain = encodeName(subSubDomain);
 
 const EMPTY_ADDRESS = "0x0000000000000000000000000000000000000000";
 const EMPTY_BYTES32 =
@@ -275,7 +283,7 @@ describe("NFT Resolver", () => {
     expect(result[1]).to.equal(signerAddress);
   });
 
-  it("should revert if there are no numeric suffix in the queried name", async () => {
+  it("should revert if the label queried is not a number", async () => {
     await target.setTarget(encodedname, l2NFTContractAddress);
     const i = new ethers.Interface(["function addr(bytes32) returns(address)"]);
     const calldata = i.encodeFunctionData("addr", [wrongSubDomainNode]);
@@ -284,7 +292,21 @@ describe("NFT Resolver", () => {
       target.resolve(wrongEncodedSubDomain, calldata, {
         enableCcipRead: true,
       })
-    ).to.be.revertedWith("No numeric suffix found");
+    ).to.be.revertedWith("Label is not a number");
+  });
+
+  it("should revert if the label contains non numeric characters", async () => {
+    await target.setTarget(encodedname, l2NFTContractAddress);
+    const i = new ethers.Interface(["function addr(bytes32) returns(address)"]);
+    const calldata = i.encodeFunctionData("addr", [
+      labelWithNonNumericCharNode,
+    ]);
+
+    await expect(
+      target.resolve(encodedlabelWithNonNumericChar, calldata, {
+        enableCcipRead: true,
+      })
+    ).to.be.revertedWith("Label is not a number");
   });
 
   it("should resolve ETH Address for the subdomain", async () => {
@@ -342,5 +364,17 @@ describe("NFT Resolver", () => {
     });
     const decoded = i.decodeFunctionResult("addr", result2);
     expect(ethers.getAddress(decoded[0])).to.equal(signerAddress);
+  });
+
+  it("should not resolve ETH Address for the sub sub domain", async () => {
+    await target.setTarget(encodedname, l2NFTContractAddress);
+    const i = new ethers.Interface(["function addr(bytes32) returns(address)"]);
+    const calldata = i.encodeFunctionData("addr", [subSubDomainNode]);
+
+    await expect(
+      target.resolve(encodedSubSubDomain, calldata, {
+        enableCcipRead: true,
+      })
+    ).to.be.revertedWith("Too many subdomain levels");
   });
 });
