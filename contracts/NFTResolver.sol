@@ -160,6 +160,9 @@ contract NFTResolver is
             return _resolve(name, data);
         }
 
+        // Only accept 1 level subdomain
+        require(LabelUtils.countLabels(name) <= 3, "Too many subdomain levels");
+
         (, address target) = _getTarget(name, 0);
 
         bytes4 selector = bytes4(data);
@@ -181,6 +184,8 @@ contract NFTResolver is
      */
     function extractNFTId(bytes calldata name) public pure returns (uint256) {
         bytes memory firstLabel = LabelUtils.extractFirstLabel(name);
+        // Only accept numbers as the label
+        require(LabelUtils.isNumber(firstLabel), "Label is not a number");
         return LabelUtils.extractNumericSuffix(firstLabel);
     }
 

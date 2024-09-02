@@ -13,7 +13,7 @@ For example for `efrogs.eth`, the DNS encoded name is `0x066566726f6773036574680
 2 - Get the target NFT contract you want to use to resolve the subdomains depending on the NFT's owner addresses.  
 For example: [0x194395587d7b169e63eaf251e86b1892fa8f1960](https://lineascan.build/address/0x194395587d7b169e63eaf251e86b1892fa8f1960)  
 
-3 - Go to the [NFT resolver contract](https://etherscan.io/address/0xe34e08c30ba5577da7b65a79dc9741bbc59e4dfa#writeContract)  
+3 - Go to the [NFT resolver contract](https://etherscan.io/address/0xed24dDCB660c83803126DAAbFAfCE3b114936C58#writeContract)  
 
 4 - Click on `Connect to Web3`with the wallet that owns the chosen ENS name (Example `efrogs.eth`)
 
@@ -33,7 +33,7 @@ target: [NFT contrac address on Linea] (Example `0x194395587d7b169e63eaf251e86b1
 
 11 - Click on `Custom Resolver`  
 
-12 - Add the NFT Resolver's address: `0xe34e08c30bA5577Da7B65a79dC9741BBc59E4Dfa`  
+12 - Add the NFT Resolver's address: `0xed24dDCB660c83803126DAAbFAfCE3b114936C58`  
 
 13 - Click on `Update`, `Open Wallet`and approve the transaction.
 
