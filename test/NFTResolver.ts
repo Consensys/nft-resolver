@@ -80,6 +80,7 @@ describe("NFT Resolver", () => {
   let rollup: RollupMock;
   let signerAddress: string;
   let l2NFTContractAddress: string;
+  let publicResolverAddress: string;
 
   before(async () => {
     // Hack to get a 'real' ethers provider from hardhat. The default `HardhatProvider`
@@ -204,7 +205,7 @@ describe("NFT Resolver", () => {
     );
     await publicResolver.setAddr(node, signerAddress);
 
-    const publicResolverAddress = await publicResolver.getAddress();
+    publicResolverAddress = await publicResolver.getAddress();
     await reverseRegistrar.setDefaultResolver(publicResolverAddress);
 
     await l1Provider.send("evm_mine", []);
@@ -244,8 +245,7 @@ describe("NFT Resolver", () => {
       verifierAddress,
       ensAddress,
       "0x0000000000000000000000000000000000000001",
-      59141,
-      publicResolverAddress
+      59141
     );
     // Mine an empty block so we have something to prove against
     await l1Provider.send("evm_mine", []);
@@ -259,12 +259,21 @@ describe("NFT Resolver", () => {
 
   it("should not allow non owner to set target", async () => {
     const incorrectname = encodeName("notowned.eth");
-    try {
-      await target.setTarget(incorrectname, l2NFTContractAddress);
-      throw "Should have reverted";
-    } catch (e: any) {
-      expect(e.reason).equal("Not authorized to set target for this node");
-    }
+
+    await expect(
+      target.setTarget(incorrectname, l2NFTContractAddress)
+    ).to.be.revertedWith("Not authorized to set target for this node");
+
+    const result = await target.getTarget(incorrectname);
+    expect(result[1]).to.equal(EMPTY_ADDRESS);
+  });
+
+  it("should not allow non owner to set base node resolver", async () => {
+    const incorrectname = encodeName("notowned.eth");
+
+    await expect(
+      target.setBaseNodeResolver(incorrectname, l2NFTContractAddress)
+    ).to.be.revertedWith("Not authorized to set resolver for this node");
 
     const result = await target.getTarget(incorrectname);
     expect(result[1]).to.equal(EMPTY_ADDRESS);
@@ -313,6 +322,8 @@ describe("NFT Resolver", () => {
     await target.setTarget(encodedname, l2NFTContractAddress);
     const result = await l2NFTContract["ownerOf(uint256)"](nftId);
     expect(ethers.getAddress(result)).to.equal(registrantAddr);
+    await target.setBaseNodeResolver(encodedname, publicResolverAddress);
+    await target.setTargetAddrSlot(encodedname, 2);
     await l1Provider.send("evm_mine", []);
 
     const i = new ethers.Interface(["function addr(bytes32) returns(address)"]);
