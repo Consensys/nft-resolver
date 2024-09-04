@@ -28,14 +28,18 @@ contract NFTResolver is
     ENS public immutable ens;
     INameWrapper public immutable nameWrapper;
     uint256 public immutable l2ChainId;
-    // PublicResolver used to resolve a base domain such as xxx.eth when queried
-    address public immutable publicResolver;
+    // The targeted NFT contract on L2
     mapping(bytes32 => address) targets;
-    uint256 constant OWNERS_SLOT = 2;
+    // The resolver for the base nodes(if any)
+    mapping(bytes32 => address) baseNodeResolvers;
+    // The owner slots in target contract containing the addresses to resolve to
+    mapping(address => uint256) targetAddrSlots;
     // To check how old is the value/proof returned and is in the acceptable range
     uint256 constant ACCEPTED_L2_BLOCK_RANGE_LENGTH = 86400;
 
     event TargetSet(bytes name, address target);
+    event BaseNodeResolverSet(bytes32 node, address resolverAddr);
+    event TargetAddrSlotSet(address target, uint256 slot);
 
     function isAuthorised(bytes32 node) internal view returns (bool) {
         address owner = ens.owner(node);
@@ -53,18 +57,16 @@ contract NFTResolver is
     error StorageHandledByL2(uint256 chainId, address contractAddress);
 
     /**
-     * @param _verifier     The chain verifier address
-     * @param _ens          The ENS registry address
-     * @param _nameWrapper  The ENS name wrapper address
-     * @param _l2ChainId    The chainId at which the resolver resolves data from
-     * @param _publicResolver The PublicResolver address to use to resolve base domains
+     * @param _verifier     The chain verifier address.
+     * @param _ens          The ENS registry address.
+     * @param _nameWrapper  The ENS name wrapper address.
+     * @param _l2ChainId    The chainId at which the resolver resolves data from.
      */
     constructor(
         IEVMVerifier _verifier,
         ENS _ens,
         INameWrapper _nameWrapper,
-        uint256 _l2ChainId,
-        address _publicResolver
+        uint256 _l2ChainId
     ) {
         require(
             address(_nameWrapper) != address(0),
@@ -79,7 +81,6 @@ contract NFTResolver is
         ens = _ens;
         nameWrapper = _nameWrapper;
         l2ChainId = _l2ChainId;
-        publicResolver = _publicResolver;
     }
 
     /**
@@ -95,8 +96,8 @@ contract NFTResolver is
     }
 
     /**
-     * Set target address to verify against
-     * @param name The encoded name to query.
+     * Set target address to verify against.
+     * @param name The DNS encoded name to set the target for.
      * @param target The L2 resolver address to verify against.
      */
     function setTarget(bytes calldata name, address target) external {
@@ -110,9 +111,43 @@ contract NFTResolver is
     }
 
     /**
+     * Set base node resolver address.
+     * @param name The DNS encoded name to set the base node resolver.
+     * @param resolverAddr The resolver address to use.
+     */
+    function setBaseNodeResolver(
+        bytes calldata name,
+        address resolverAddr
+    ) external {
+        (bytes32 node, ) = getTarget(name);
+        require(
+            isAuthorised(node),
+            "Not authorized to set resolver for this node"
+        );
+        baseNodeResolvers[node] = resolverAddr;
+        emit BaseNodeResolverSet(node, resolverAddr);
+    }
+
+    /**
+     * Set the slot to query by ccip to get the address from the target contract.
+     * @param name The DNS encoded name to set the target address slot to query.
+     * @param slot The slot to set.
+     */
+    function setTargetAddrSlot(bytes calldata name, uint256 slot) external {
+        (bytes32 node, ) = getTarget(name);
+        require(
+            isAuthorised(node),
+            "Not authorized to set target address slot for this node"
+        );
+        address target = targets[node];
+        targetAddrSlots[target] = slot;
+        emit TargetAddrSlotSet(target, slot);
+    }
+
+    /**
      * @dev Returns the L2 target address that can answer queries for `name`.
-     * @param name DNS encoded ENS name to query
-     * @return node The node of the name
+     * @param name DNS encoded ENS name to query.
+     * @return node The node of the name.
      * @return target The L2 resolver address to verify against.
      */
     function getTarget(
@@ -142,9 +177,9 @@ contract NFTResolver is
 
     /**
      * @dev Resolve and verify a record stored in l2 target address. It supports subname by fetching target recursively to the nearest parent.
-     * @param name DNS encoded ENS name to query
-     * @param data The actual calldata
-     * @return result result of the call
+     * @param name DNS encoded ENS name to query.
+     * @param data The actual calldata.
+     * @return result Result of the call.
      */
     function resolve(
         bytes calldata name,
@@ -157,7 +192,8 @@ contract NFTResolver is
 
         // If trying to resolve the base domain, we use the PublicResolver
         if (isBaseDomain) {
-            return _resolve(name, data);
+            address baseNodeResolver = baseNodeResolvers[node];
+            return _resolve(baseNodeResolver, data);
         }
 
         // Only accept 1 level subdomain
@@ -168,9 +204,10 @@ contract NFTResolver is
         bytes4 selector = bytes4(data);
 
         if (selector == IAddrResolver.addr.selector) {
-            // Get NFT Index from the
+            // Get NFT Index from the DNS encoded name
             uint256 nftId = extractNFTId(name);
-            return _addr(nftId, target);
+            uint256 slot = targetAddrSlots[target];
+            return _addr(nftId, slot, target);
         }
 
         // None selector has been found it reverts
@@ -178,9 +215,9 @@ contract NFTResolver is
     }
 
     /**
-     * Get the NFT Id from the ENS name's label
-     * @param name DNS encoded ENS name
-     * @return id the NFT id
+     * Get the NFT Id from the ENS name's label.
+     * @param name DNS encoded ENS name.
+     * @return id The NFT id.
      */
     function extractNFTId(bytes calldata name) public pure returns (uint256) {
         bytes memory firstLabel = LabelUtils.extractFirstLabel(name);
@@ -190,10 +227,10 @@ contract NFTResolver is
     }
 
     /**
-     * @dev Resolve and throws an EIP 3559 compliant error
-     * @param name DNS encoded ENS name to query
-     * @param _addr The actual calldata
-     * @return result result of the call
+     * @dev Resolve and throws an EIP 3559 compliant error.
+     * @param name DNS encoded ENS name to query.
+     * @param _addr The actual calldata.
+     * @return result Result of the call.
      */
     function setAddr(
         bytes calldata name,
@@ -212,10 +249,10 @@ contract NFTResolver is
      * @return The return data, ABI encoded identically to the underlying function.
      */
     function _resolve(
-        bytes memory,
+        address baseNodeResolver,
         bytes memory data
     ) internal view returns (bytes memory) {
-        (bool success, bytes memory result) = publicResolver.staticcall(data);
+        (bool success, bytes memory result) = baseNodeResolver.staticcall(data);
         if (success) {
             return result;
         } else {
@@ -228,11 +265,12 @@ contract NFTResolver is
 
     function _addr(
         uint256 tokenId,
+        uint256 slot,
         address target
     ) private view returns (bytes memory) {
         EVMFetcher
             .newFetchRequest(verifier, target)
-            .getStatic(OWNERS_SLOT)
+            .getStatic(slot)
             .element(tokenId)
             .fetch(this.addrCallback.selector, ""); // recordVersions
     }
