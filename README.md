@@ -1,6 +1,6 @@
 # NFT Resolver
 
-The NFT Resolver is intented to be used to resolve any subdomain for a specific ENS domain where a NFT collection has been deployed on Linea.  
+The NFT Resolver is Intended to be used to resolve any subdomain for a specific ENS domain where a NFT collection has been deployed on Linea.  
 More precisely it is ID based, meaning the resolution of an address for a subdomain is determined by the ownership of the NFT's ID on the target NFT contract on Linea.
 
 ## Setup for your own ENS domain for your own NFT collection
@@ -24,12 +24,12 @@ For example for the Efrogs NFT contract the owners are stored in the slot `122`.
 
 6 - Click on `setTarget` and add the parameters:  
 `name`: [DNS encoded name of your ENS name] (Example `0x066566726f67730365746800`)  
-`target`: [NFT contrac address on Linea] (Example `0x194395587d7b169e63eaf251e86b1892fa8f1960`)  
+`target`: [NFT contract address on Linea] (Example `0x194395587d7b169e63eaf251e86b1892fa8f1960`)  
 Click on write and approve the transaction.
 
 7 - Click on `setBaseNodeResolver` and add the parameters:  
 `name`: [DNS encoded name of your ENS name] (Example `0x066566726f67730365746800`)  
-`resolverAddr`: [The resolver you want to keep using for you base domain] (Example `0x231b0Ee14048e9dCcD1d247744d114a4EB5E8E63`)  
+`resolverAddr`: [The resolver you want to keep using for your base domain] (Example `0x231b0Ee14048e9dCcD1d247744d114a4EB5E8E63`)  
 Click on write and approve the transaction.
 
 8 - Click on `setTargetAddrSlot` and add the parameters:  
