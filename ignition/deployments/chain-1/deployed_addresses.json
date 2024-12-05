@@ -1,4 +1,6 @@
 {
   "NFTResolverModule#LabelUtils": "0xE71B375875A0F9837523F62Bcc937bDe37635524",
-  "NFTResolverModule#NFTResolver": "0x8210077e031302C41aCD7FccC38628CA1788A999"
+  "NFTResolverModule#NFTResolver": "0x8210077e031302C41aCD7FccC38628CA1788A999",
+  "NFTPackedOwnersResolverModule#LabelUtils": "0x58C10D23F2C7bE49d5F6D333Eebd1ea2B85277FA",
+  "NFTPackedOwnersResolverModule#NFTPackedOwnersResolver": "0xD8D17c8dc5FA87242D7be0735D7633Bf3cA29DE5"
 }
