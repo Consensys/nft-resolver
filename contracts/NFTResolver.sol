@@ -14,7 +14,6 @@ import {ITargetResolver} from "./ITargetResolver.sol";
 import {IAddrSetter} from "./IAddrSetter.sol";
 import "@openzeppelin/contracts/utils/introspection/ERC165.sol";
 import {LabelUtils} from "./LabelUtils.sol";
-import {console} from "hardhat/console.sol";
 
 contract NFTResolver is
     EVMFetchTarget,
