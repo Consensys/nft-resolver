@@ -14,6 +14,7 @@ import {ITargetResolver} from "./ITargetResolver.sol";
 import {IAddrSetter} from "./IAddrSetter.sol";
 import "@openzeppelin/contracts/utils/introspection/ERC165.sol";
 import {LabelUtils} from "./LabelUtils.sol";
+import {console} from "hardhat/console.sol";
 
 contract NFTResolver is
     EVMFetchTarget,
@@ -32,14 +33,14 @@ contract NFTResolver is
     mapping(bytes32 => address) targets;
     // The resolver for the base nodes(if any)
     mapping(bytes32 => address) baseNodeResolvers;
-    // The owner slots in target contract containing the addresses to resolve to
-    mapping(address => uint256) targetAddrSlots;
+    // The owner slots for a specific node in the contract containing the addresses to resolve to
+    mapping(bytes32 => uint256) targetAddrSlots;
     // To check how old is the value/proof returned and is in the acceptable range
     uint256 constant ACCEPTED_L2_BLOCK_RANGE_LENGTH = 86400;
 
     event TargetSet(bytes name, address target);
     event BaseNodeResolverSet(bytes32 node, address resolverAddr);
-    event TargetAddrSlotSet(address target, uint256 slot);
+    event TargetAddrSlotSet(bytes32 node, uint256 slot);
 
     function isAuthorised(bytes32 node) internal view returns (bool) {
         address owner = ens.owner(node);
@@ -139,9 +140,8 @@ contract NFTResolver is
             isAuthorised(node),
             "Not authorized to set target address slot for this node"
         );
-        address target = targets[node];
-        targetAddrSlots[target] = slot;
-        emit TargetAddrSlotSet(target, slot);
+        targetAddrSlots[node] = slot;
+        emit TargetAddrSlotSet(node, slot);
     }
 
     /**
@@ -175,6 +175,25 @@ contract NFTResolver is
         return (node, target);
     }
 
+    function _getSlot(
+        bytes memory name,
+        uint256 offset
+    ) private view returns (bytes32 node, uint256 slot) {
+        uint256 len = name.readUint8(offset);
+        node = bytes32(0);
+        if (len > 0) {
+            bytes32 label = name.keccak(offset + 1, len);
+            (node, slot) = _getSlot(name, offset + len + 1);
+            node = keccak256(abi.encodePacked(node, label));
+            if (targetAddrSlots[node] != 0) {
+                return (node, targetAddrSlots[node]);
+            }
+        } else {
+            return (bytes32(0), 0);
+        }
+        return (node, slot);
+    }
+
     /**
      * @dev Resolve and verify a record stored in l2 target address. It supports subname by fetching target recursively to the nearest parent.
      * @param name DNS encoded ENS name to query.
@@ -199,14 +218,14 @@ contract NFTResolver is
         // Only accept 1 level subdomain
         require(LabelUtils.countLabels(name) <= 3, "Too many subdomain levels");
 
-        (, address target) = _getTarget(name, 0);
-
         bytes4 selector = bytes4(data);
 
         if (selector == IAddrResolver.addr.selector) {
+            (, address target) = _getTarget(name, 0);
+            (, uint256 slot) = _getSlot(name, 0);
             // Get NFT Index from the DNS encoded name
             uint256 nftId = extractNFTId(name);
-            uint256 slot = targetAddrSlots[target];
+
             return _addr(nftId, slot, target);
         }
 
