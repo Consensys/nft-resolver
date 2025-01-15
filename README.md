@@ -18,7 +18,7 @@ Read more about slot calculation [here](https://medium.com/@ozorawachie/solidity
 If you are using hardhat for your smart contract project, you can also use the plugin [hardhat-storage-layout](https://www.npmjs.com/package/hardhat-storage-layout)  
 For example for the Efrogs NFT contract the owners are stored in the slot `122`.
 
-4 - Go to the [NFT resolver contract](https://etherscan.io/address/0x8210077e031302C41aCD7FccC38628CA1788A999#writeContract)
+4 - Go to the [NFT resolver contract](https://etherscan.io/address/0x9e06380CBb5D04C722e38E9c3C7659c7c1510df3#writeContract)
 
 5 - Click on `Connect to Web3`with the wallet that owns the chosen ENS name (Example `efrogs.eth`)
 
