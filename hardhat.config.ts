@@ -36,27 +36,22 @@ const config: HardhatUserConfig = {
     },
   },
   etherscan: {
-    apiKey: {
-      lineaSepolia: process.env.LINEASCAN_API_KEY ?? "",
-      lineaMainnet: process.env.LINEASCAN_API_KEY ?? "",
-      sepolia: process.env.ETHERSCAN_API_KEY ?? "",
-      mainnet: process.env.ETHERSCAN_API_KEY ?? "",
-    },
+    apiKey: process.env.ETHERSCAN_API_KEY ?? "",
     customChains: [
       {
-        network: "lineaSepolia",
-        chainId: 59141,
+        network: "sepolia",
+        chainId: 11155111,
         urls: {
-          apiURL: "https://api-sepolia.lineascan.build/api",
-          browserURL: "https://sepolia.lineascan.build/",
+          apiURL: "https://api.etherscan.io/v2/api?chainid=11155111",
+          browserURL: "https://sepolia.etherscan.io",
         },
       },
       {
-        network: "lineaMainnet",
-        chainId: 59144,
+        network: "mainnet",
+        chainId: 1,
         urls: {
-          apiURL: "https://api.lineascan.build/api",
-          browserURL: "https://lineascan.build/",
+          apiURL: "https://api.etherscan.io/v2/api?chainid=1",
+          browserURL: "https://etherscan.io",
         },
       },
     ],
