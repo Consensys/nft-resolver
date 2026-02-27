@@ -9,7 +9,7 @@ updates:
       day: monday
       time: "03:00"
     open-pull-requests-limit: 5
-    assignees: ["Julink-eth", "VGau"]
+    assignees: ["VGau"]
     labels: ["dependencies", "github-actions"]
     commit-message:
       prefix: "deps(actions)"
