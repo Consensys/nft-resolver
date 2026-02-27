@@ -1,4 +1,4 @@
-name: Linea Security Code Scanner
+name: Security Code Scanner
 
 on:
   push:
