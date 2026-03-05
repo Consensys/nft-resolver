@@ -32,7 +32,7 @@
   },
   "dependencies": {
     "@consensys/linea-state-verifier": "^1.0.1",
-    "@ensdomains/ens-contracts": "^1.2.2",
+    "@ensdomains/ens-contracts": "^1.6.2",
     "@openzeppelin/contracts": "^4.1.0"
   }
 }
