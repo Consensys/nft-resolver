@@ -1,6 +1,6 @@
 {
-  "NFTResolverModule#LabelUtils": "0x00f4d5760E65245bBaFEE45cb522F63bFe821ef1",
-  "NFTResolverModule#NFTResolver": "0x9e06380CBb5D04C722e38E9c3C7659c7c1510df3",
-  "NFTPackedOwnersResolverModule#LabelUtils": "0xcC78d42c17E168ca8fe6C18E6E61b201bDF1E0AF",
-  "NFTPackedOwnersResolverModule#NFTPackedOwnersResolver": "0xd7e56A2bc37a2946A921bAaE5129eCc528E0f8f5"
+  "NFTResolverModule#LabelUtils": "0x4c05933e4E0c2a6Af2e3DC0e317B3Da472af91dB",
+  "NFTResolverModule#NFTResolver": "0xFD5FB23e06e46347d8724486cDb681507592e237",
+  "NFTPackedOwnersResolverModule#LabelUtils": "0xD9b953bA3Bf0b75D8F38ec7184b55Dc7fe0E87ea",
+  "NFTPackedOwnersResolverModule#NFTPackedOwnersResolver": "0x627b783297cf07DB56dc6dfF609E228c4804b952"
 }

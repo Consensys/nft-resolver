@@ -22,7 +22,7 @@ const NFTPackedOwnersResolverModule = buildModule(
         wrapperAddress = "0x0635513f179D50A207757E05759CbD106d7dFcE8";
         break;
       case "mainnet":
-        verifierAddress = "0x2aD1A39a3b616FB11ac5DB290061A0A5C09771f3";
+        verifierAddress = "0x9a4b070A5A6C09C2d0f00309aC1613109A3F6b41";
         ensAddress = "0x00000000000C2E074eC69A0dFb2997BA6C7d2e1e";
         wrapperAddress = "0xD4416b13d2b3a9aBae7AcD5D6C2BbDBE25686401";
         break;
